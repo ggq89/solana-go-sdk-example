@@ -9,8 +9,8 @@ import (
 )
 
 func main() {
-	c := client.NewClient("http://localhost:8899")
-	balance, err := c.GetBalance(context.Background(), "6ygSF4M5AXDgyzwBneQyM3wnadUcZ9tX9Y3Y58fRmXNc")
+	c := client.NewClient("https://api.devnet.solana.com")
+	balance, err := c.GetBalance(context.Background(), "83R5RVHMEEmHtj9QydfAX958JDoNHKREmQhw8k24ryMj")
 	if err != nil {
 		log.Fatalln("get balance error", err)
 	}
