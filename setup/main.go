@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	c := client.NewClient("http://localhost:8899")
+	c := client.NewClient("https://api.devnet.solana.com")
 	resp, err := c.GetVersion(context.Background())
 	if err != nil {
 		log.Fatalf("get version error, err: %v", err)
