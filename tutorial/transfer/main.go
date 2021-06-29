@@ -9,8 +9,8 @@ import (
 	"github.com/portto/solana-go-sdk/sysprog"
 	"github.com/portto/solana-go-sdk/types"
 
-	"github.com/cosmos/go-bip39"
-	"golang.org/x/crypto/ed25519"
+	//"github.com/cosmos/go-bip39"
+	//"golang.org/x/crypto/ed25519"
 )
 
 func main() {
@@ -25,8 +25,8 @@ func main() {
 		log.Fatalf("get recent block hash error, err: %v\n", err)
 	}
 
-	seed := bip39.NewSeed("mnemonic", "")
-	pri := ed25519.NewKeyFromSeed(seed[:32])
+	//seed := bip39.NewSeed("mnemonic", "")
+	//pri := ed25519.NewKeyFromSeed(seed[:32])
 
 	rawTx, err := types.CreateRawTransaction(types.CreateRawTransactionParam{
 		Instructions: []types.Instruction{
@@ -34,16 +34,16 @@ func main() {
 				//alice.PublicKey, // from
 				common.PublicKeyFromString("83R5RVHMEEmHtj9QydfAX958JDoNHKREmQhw8k24ryMj"),
 				common.PublicKeyFromString("9CfNE5H21Rqh1Wev28vZ3f41315GU6uz8khxt6ihh9Gs"), // to
-				5e8, // 1 SOL
+				2e8, // 1 SOL
 			),
 		},
 		//Signers:         []types.Account{feePayer, alice},
 		Signers:         []types.Account{
-			//types.AccountFromPrivateKeyBytes([]byte{}),
-			types.AccountFromPrivateKeyBytes(pri),
+			types.AccountFromPrivateKeyBytes([]byte{}),
+			//types.AccountFromPrivateKeyBytes(pri),
 		},
 		//FeePayer:        feePayer.PublicKey,
-		FeePayer:common.PublicKeyFromString("83R5RVHMEEmHtj9QydfAX958JDoNHKREmQhw8k24ryMj"),
+		//FeePayer:common.PublicKeyFromString("83R5RVHMEEmHtj9QydfAX958JDoNHKREmQhw8k24ryMj"),
 		RecentBlockHash: res.Blockhash,
 	})
 	if err != nil {
