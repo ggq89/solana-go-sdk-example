@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 
 	"github.com/portto/solana-go-sdk/client"
@@ -28,22 +29,27 @@ func main() {
 	//seed := bip39.NewSeed("mnemonic", "")
 	//pri := ed25519.NewKeyFromSeed(seed[:32])
 
+	str := "private key"
+	var pri []byte
+	err = json.Unmarshal([]byte(str),&pri)
+	if err != nil {
+		log.Fatalf("err: %v\n", err)
+	}
+	from := types.AccountFromPrivateKeyBytes(pri)
+
 	rawTx, err := types.CreateRawTransaction(types.CreateRawTransactionParam{
 		Instructions: []types.Instruction{
 			sysprog.Transfer(
 				//alice.PublicKey, // from
-				common.PublicKeyFromString("83R5RVHMEEmHtj9QydfAX958JDoNHKREmQhw8k24ryMj"),
+				from.PublicKey,
 				common.PublicKeyFromString("9CfNE5H21Rqh1Wev28vZ3f41315GU6uz8khxt6ihh9Gs"), // to
-				2e8, // 1 SOL
+				1e7, // 1 SOL
 			),
 		},
 		//Signers:         []types.Account{feePayer, alice},
-		Signers:         []types.Account{
-			types.AccountFromPrivateKeyBytes([]byte{}),
-			//types.AccountFromPrivateKeyBytes(pri),
-		},
+		Signers:         []types.Account{from},
 		//FeePayer:        feePayer.PublicKey,
-		//FeePayer:common.PublicKeyFromString("83R5RVHMEEmHtj9QydfAX958JDoNHKREmQhw8k24ryMj"),
+		FeePayer:from.PublicKey,
 		RecentBlockHash: res.Blockhash,
 	})
 	if err != nil {
