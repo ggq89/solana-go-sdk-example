@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/portto/solana-go-sdk/assotokenprog"
 	"log"
 
 	"github.com/portto/solana-go-sdk/client"
@@ -19,7 +20,8 @@ var mintPubkey = common.PublicKeyFromString("9WKBr1Gzt6YS1g4XMGHxTwZsmpyi5DHCyxq
 
 var feeTokenATAPubkey = common.PublicKeyFromString("AKpvREJ4JpdtHYWuk4W5J2Sro1ZfN11q7kuN7omGRCAC")
 
-var aliceTokenATAPubkey = common.PublicKeyFromString("ACzsMjMGJkdaUNQ1LtGa7bFe3GLWorv6PVdTCpXJxfdA")
+//var aliceTokenATAPubkey = common.PublicKeyFromString("ACzsMjMGJkdaUNQ1LtGa7bFe3GLWorv6PVdTCpXJxfdA")
+var alicePubkey = common.PublicKeyFromString("49CYdFBgq1C6k8sBNniVzPLfRakcZ2VdHit3xhjvoMp8")
 
 func main() {
 	c := client.NewClient("https://api.devnet.solana.com")
@@ -28,11 +30,24 @@ func main() {
 	if err != nil {
 		log.Fatalf("get recent block hash error, err: %v\n", err)
 	}
+
+	aliceATA, _, err := common.FindAssociatedTokenAddress(alicePubkey, mintPubkey)
+	if err != nil {
+		log.Fatalf("get associated token account error, err: %v\n", err)
+
+	}
+
 	rawTx, err := types.CreateRawTransaction(types.CreateRawTransactionParam{
 		Instructions: []types.Instruction{
+			assotokenprog.CreateAssociatedTokenAccount(
+				feePayer.PublicKey,
+				alicePubkey,
+				mintPubkey,
+			),
 			tokenprog.TransferChecked(
 				feeTokenATAPubkey,
-				aliceTokenATAPubkey,
+				//aliceTokenATAPubkey,
+				aliceATA,
 				mintPubkey,
 				//alice.PublicKey,
 				feePayer.PublicKey,
