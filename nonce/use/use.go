@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 	"log"
 
 	"github.com/portto/solana-go-sdk/client"
@@ -19,34 +20,12 @@ func main() {
 
 	c := client.NewClient("https://api.devnet.solana.com")
 
-	// fetch nonce
-	cfg := client.GetAccountInfoConfig{
-		client.GetAccountInfoConfigEncodingBase64,
-		client.GetAccountInfoConfigDataSlice{},
-	}
-	accountInfo, err := c.GetAccountInfo(
-		context.Background(),
-		"8NoQpwqqEwHiTPA8WrFEQUEJ425VcCJu9wzKSwA1oUwC",
-		cfg,
-	)
+	nonceAccount, err := getNonceAccount(c, nonceAccountPubkey.ToBase58())
 	if err != nil {
-		log.Fatalf("failed to get account info, err: %v", err)
+		log.Fatalf("failed to getNonceAccount, err: %v", err)
 	}
 
-	data, ok := accountInfo.Data.([]interface{})
-	if !ok {
-		log.Fatalf("failed to cast raw response to []interface{}")
-	}
-
-	rawData, err := base64.StdEncoding.DecodeString(data[0].(string))
-	if err != nil {
-		log.Fatalf("failed to base64 decode data")
-	}
-
-	nonceAccount, err := sysprog.NonceAccountDeserialize(rawData)
-	if err != nil {
-		log.Fatalf("failed to deserialize nonce account, err: %v", err)
-	}
+	log.Printf("nonce: %+v\n", nonceAccount.Nonce.ToBase58())
 
 	rawTx, err := types.CreateRawTransaction(types.CreateRawTransactionParam{
 		FeePayer: feePayer.PublicKey,
@@ -59,7 +38,7 @@ func main() {
 				//alice.PublicKey, // from
 				feePayer.PublicKey,
 				common.PublicKeyFromString("83R5RVHMEEmHtj9QydfAX958JDoNHKREmQhw8k24ryMj"), // to
-				1e9, // 1 SOL
+				1e7, // 1 SOL
 			),
 		},
 		Signers: []types.Account{feePayer},
@@ -75,5 +54,76 @@ func main() {
 		log.Fatalf("send raw tx error, err: %v\n", err)
 	}
 
-	log.Println("txhash:", txhash)
+	log.Println("txhash: ", txhash)
+
+	for true {
+		resp, err := c.GetSignatureStatuses(context.Background(), []string{txhash})
+		if err!= nil {
+			log.Fatalf("GetSignatureStatuses err: %v\n", err)
+			continue
+		}
+
+		log.Printf("%+v\n", resp)
+
+		if len(resp) == 0 {
+			log.Fatalf("GetSignatureStatuses result len 0")
+			continue
+		}
+
+		if resp[0].ConfirmationStatus != nil {
+			status := *(resp[0].ConfirmationStatus)
+			log.Printf("tx ConfirmationStatus: %s\n", status)
+			if status == client.CommitmentFinalized {
+				break
+			}
+		}
+
+
+		nonceAccount, err := getNonceAccount(c, nonceAccountPubkey.ToBase58())
+		if err != nil {
+			log.Fatalf("failed to deserialize nonce account, err: %v", err)
+			continue
+		}
+
+		log.Printf("nonce account state: %v\n", nonceAccount.State)
+		log.Printf("nonce: %v\n", nonceAccount.Nonce.ToBase58())
+	}
+}
+
+func getNonceAccount(c *client.Client, nonceAccountAddr string) (*sysprog.NonceAccount, error) {
+	// fetch nonce
+	cfg := client.GetAccountInfoConfig{
+		client.GetAccountInfoConfigEncodingBase64,
+		client.GetAccountInfoConfigDataSlice{},
+	}
+	accountInfo, err := c.GetAccountInfo(
+		context.Background(),
+		nonceAccountAddr,
+		cfg,
+	)
+	if err != nil {
+		log.Fatalf("failed to get account info, err: %v", err)
+		return nil, err
+	}
+
+	data, ok := accountInfo.Data.([]interface{})
+	if !ok {
+		errStr := "failed to cast raw response to []interface{}"
+		log.Fatalf(errStr)
+		return nil, fmt.Errorf(errStr)
+	}
+
+	rawData, err := base64.StdEncoding.DecodeString(data[0].(string))
+	if err != nil {
+		log.Fatalf("failed to base64 decode data")
+		return nil, err
+	}
+
+	nonceAccount, err := sysprog.NonceAccountDeserialize(rawData)
+	if err != nil {
+		log.Fatalf("failed to deserialize nonce account, err: %v", err)
+		return nil, err
+	}
+
+	return &nonceAccount, nil
 }
