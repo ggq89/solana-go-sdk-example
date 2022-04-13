@@ -19,10 +19,12 @@ import (
 // 83R5RVHMEEmHtj9QydfAX958JDoNHKREmQhw8k24ryMj
 var  alice, _ = types.AccountFromBase58("23jvmogkErSMC9rR8nShPP15yWDdN8hDzcYzS2ixeE4QnvfPcyD8oBuS2mwK2v31nG24pqN9kevn6Xw3Mna8P4U1")
 
-// 9aE476sH92Vz7DMPyq5WLPkrKWivxeuTKEFKd2sZZcde
-var feePayer, _ = types.AccountFromBase58("4voSPg3tYuWbKzimpQK9EbXHmuyy5fUrtXvpLDMLkmY6TRncaTHAKGD8jUg3maB5Jbrd9CkQg4qjJMyN6sQvnEF2")
+// 9TKpNubehUkr8PfP6vCoWUuNejiNw9y21MLcCsEUUSPq
+var feePayer, _ = types.AccountFromBytes([]byte{178, 244, 76, 4, 247, 41, 113, 40, 111, 103, 12, 76, 195, 4, 100, 123, 88, 226, 37, 56, 209, 180, 92, 77, 39, 85, 78, 202, 121, 162, 88, 29, 125, 155, 223, 107, 139, 223, 229, 82, 89, 209, 27, 43, 108, 205, 144, 2, 74, 159, 215, 57, 198, 4, 193, 36, 161, 50, 160, 119, 89, 240, 102, 184})
 
 func main() {
+	nonceAccountPubkey := common.PublicKeyFromString("8NoQpwqqEwHiTPA8WrFEQUEJ425VcCJu9wzKSwA1oUwC")
+
 	c := client.NewClient(rpc.DevnetRPCEndpoint)
 
 	mint := types.NewAccount()
@@ -32,17 +34,20 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to find a valid ata, err: %v", err)
 	}
+	fmt.Printf("ata: %v\n", ata.ToBase58())
 
 	tokenMetadataPubkey, err := tokenmeta.GetTokenMetaPubkey(mint.PublicKey)
 	if err != nil {
 		log.Fatalf("failed to find a valid token metadata, err: %v", err)
 
 	}
+	fmt.Printf("tokenMetadataPubkey: %v\n", tokenMetadataPubkey.ToBase58())
 
 	tokenMasterEditionPubkey, err := tokenmeta.GetMasterEdition(mint.PublicKey)
 	if err != nil {
 		log.Fatalf("failed to find a valid master edition, err: %v", err)
 	}
+	fmt.Printf("tokenMasterEditionPubkey: %v\n", tokenMasterEditionPubkey.ToBase58())
 
 	mintAccountRent, err := c.GetMinimumBalanceForRentExemption(context.Background(), tokenprog.MintAccountSize)
 	if err != nil {
@@ -60,8 +65,12 @@ func main() {
 			FeePayer:        feePayer.PublicKey,
 			RecentBlockhash: recentBlockhashResponse.Blockhash,
 			Instructions: []types.Instruction{
+				sysprog.AdvanceNonceAccount(sysprog.AdvanceNonceAccountParam{
+					Nonce: nonceAccountPubkey,
+					Auth:  feePayer.PublicKey,
+				}),
 				sysprog.CreateAccount(sysprog.CreateAccountParam{
-					From:     alice.PublicKey,
+					From:     feePayer.PublicKey,
 					New:      mint.PublicKey,
 					Owner:    common.TokenProgramID,
 					Lamports: mintAccountRent,
@@ -81,10 +90,10 @@ func main() {
 					UpdateAuthorityIsSigner: true,
 					IsMutable:               true,
 					MintData: tokenmeta.Data{
-						Name:                 "Fake SMS #10315",
-						Symbol:               "FSMB",
-						Uri:                  "https://34c7ef24f4v2aejh75xhxy5z6ars4xv47gpsdrei6fiowptk2nqq.arweave.net/3wXyF1wvK6ARJ_9ue-O58CMuXrz5nyHEiPFQ6z5q02E",
-						SellerFeeBasisPoints: 100,
+						Name:                 "Duck #1260",
+						Symbol:               "DD",
+						Uri:                  "https://ipfs.io/ipfs/QmYie65rs7TiEppw4hxFhjnXxgDfn4EkrLhcAQZ62J1rHs/1260.json",
+						SellerFeeBasisPoints: 500,
 						Creators: &[]tokenmeta.Creator{
 							{
 								Address:  alice.PublicKey,
