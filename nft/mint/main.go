@@ -54,16 +54,17 @@ func main() {
 		log.Fatalf("failed to get mint account rent, err: %v", err)
 	}
 
-	recentBlockhashResponse, err := c.GetRecentBlockhash(context.Background())
+	nonce, err := c.GetNonceFromNonceAccount(context.Background(), nonceAccountPubkey.String())
 	if err != nil {
 		log.Fatalf("failed to get recent blockhash, err: %v", err)
 	}
+	fmt.Printf("nonce: %v\n", nonce)
 
 	tx, err := types.NewTransaction(types.NewTransactionParam{
 		Signers: []types.Account{mint, feePayer, alice},
 		Message: types.NewMessage(types.NewMessageParam{
 			FeePayer:        feePayer.PublicKey,
-			RecentBlockhash: recentBlockhashResponse.Blockhash,
+			RecentBlockhash: nonce,
 			Instructions: []types.Instruction{
 				sysprog.AdvanceNonceAccount(sysprog.AdvanceNonceAccountParam{
 					Nonce: nonceAccountPubkey,

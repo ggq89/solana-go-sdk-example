@@ -4,6 +4,8 @@ import (
 	"context"
 	"log"
 
+	"github.com/davecgh/go-spew/spew"
+
 	"github.com/portto/solana-go-sdk/client"
 	"github.com/portto/solana-go-sdk/common"
 	"github.com/portto/solana-go-sdk/program/metaplex/tokenmeta"
@@ -15,7 +17,7 @@ func main() {
 	// If you want to get its metadata, you need to know where it stored.
 	// and you can use `tokenmeta.GetTokenMetaPubkey` to get the metadata account key
 	// here I take a random Degenerate Ape Academy as an example
-	mint := common.PublicKeyFromString("6YSqRm9Zu272ZQqXyQnekaCNzxNcayRFzAKBe51Q6k7Z")
+	mint := common.PublicKeyFromString("3hqGqxJR27b7QDcBrRbVoUQ7g7nKXqvHBKCYgZUFu7Py")
 	metadataAccount, err := tokenmeta.GetTokenMetaPubkey(mint)
 	if err != nil {
 		log.Fatalf("faield to get metadata account, err: %v", err)
@@ -36,7 +38,9 @@ func main() {
 		log.Fatalf("failed to parse metaAccount, err: %v", err)
 	}
 
-	log.Printf("metadata: %+v", metadata)
-	log.Printf("Creators: %+v", metadata.Data.Creators)
-	log.Printf("EditionNonce: %+v", *metadata.EditionNonce)
+	//log.Printf("metadata: %+v", metadata)
+	//log.Printf("Creators: %+v", metadata.Data.Creators)
+	//log.Printf("EditionNonce: %+v", *metadata.EditionNonce)
+
+	spew.Dump(metadata)
 }
