@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/davecgh/go-spew/spew"
@@ -22,6 +23,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("faield to get metadata account, err: %v", err)
 	}
+	fmt.Printf("tokenMetadataPubkey: %v\n", metadataAccount.ToBase58())
+
+	tokenMasterEditionPubkey, err := tokenmeta.GetMasterEdition(mint)
+	if err != nil {
+		log.Fatalf("failed to find a valid master edition, err: %v", err)
+	}
+	fmt.Printf("tokenMasterEditionPubkey: %v\n", tokenMasterEditionPubkey.ToBase58())
 
 	// new a client
 	c := client.NewClient(rpc.DevnetRPCEndpoint)
